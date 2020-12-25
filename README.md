@@ -1,2 +1,4 @@
-# CFU
-RISC-V FPGA SIG Custom Function Unit Specification
+Composable Custom Function Unit Specification
+=============================================
+
+Please refer to the [Composable Custom Function Unit Specification](https://cfu.readthedocs.io).
