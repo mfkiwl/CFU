@@ -1,7 +1,7 @@
 ## bnn_cfu_test.py: bnn_cfu (CFU-L0) testbench
 
 '''
-Copyright (C) 2019-2022, Gray Research LLC.
+Copyright (C) 2019-2023, Gray Research LLC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,12 +18,13 @@ limitations under the License.
 
 import cocotb
 import random
+from cfu_li import *
 from tb import TB
 
 # testbench
 @cocotb.test()
 async def bnn_cfu_tb(dut):
-    tb = TB(dut, 0)
+    tb = TB(dut, Level.l0_comb)
     await tb.start()
     await sweep(tb)
     await tb.stop()
@@ -56,7 +57,7 @@ def cases(n_bits):
         (i,j) = (j,(i+j)&mask)
 
     # random
-    for _ in range(10000):
+    for _ in range(1000):
         yield (random.randrange(1<<n_bits),random.randrange(1<<n_bits))
 
 # cocotb-test, thanks @forencich

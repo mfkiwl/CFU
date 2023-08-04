@@ -4,7 +4,8 @@ CFU Zoo
 This work-in-progress directory will provide various example CFUs, standard mux and adapter CFUs,
 CFU-LI compatible CPUs, and composed systems.
 
-The various testbenches require `cocotb` `cocotb-test` `pytest-xdist` `iverilog` `verilator-4.106`.
+The various testbenches require `cocotb` `cocotb-test` `pytest-xdist` `iverilog`
+and `verilator-4.106` or `verilator-5.006+`.
 Planning to automate setup and execution using `tox`.
 
 Until then, any testbench may be run with
@@ -16,16 +17,27 @@ Verilator, and must be free of warnings, esp. Verilator lint warnings.
 
 Current CFU examples:
 
-| CFU          | level | stateful | serializ. | comments            |
-|--------------|-------|----------|-----------|---------------------|
-| popcount_cfu | L0    | -        | -         | -                   |
-| bnn_cfu      | L0    | -        | -         | reuses popcount_cfu |
-| mulacc_cfu   | L1    | yes      | yes       | -                   |
-| dotprod_cfu  | L1    | yes      | yes       | -                   |
+| CFU             | level | stateful | serializ. | comments                           |
+|-----------------|-------|----------|-----------|------------------------------------|
+| popcount_cfu    | L0    | -        | -         | -                                  |
+| bnn_cfu         | L0    | -        | -         | reuses popcount_cfu                |
+| mulacc_cfu      | L1    | yes      | yes       | -                                  |
+| dotprod_cfu     | L1    | yes      | yes       | -                                  |
+| cvt01_cfu       | L1    | -        | -         | CFU-L0 to -L1 adapter              |
+| cvt02_cfu       | L2    | -        | -         | CFU-L0 to -L2 adapter              |
+| cvt12_cfu       | L2    | *        | *         | CFU-L1 to -L2 adapter              |
+| mux2_cfu        | L2    | *        | *         | CFU-L2 2-1 multiplexer adapter     |
+| bnn_l1_cfu      | L1    | -        | -         | bnn_cfu + cvt01_cfu                |
+| bnn_l2_cfu      | L2    | -        | -         | bnn_cfu + cvt02_cfu                |
+| bnn_l1_l2_cfu   | L2    | -        | -         | bnn_cfu + cvt01_cfu + cvt12_cfu    |
+| mulacc_l2_cfu   | L2    | yes      | yes       | cvt12_cfu + mulacc_cfu             |
+| mux_macs_cfu    | L2    | yes      | yes       | mux-n + n mulacc_l2_cfu            |
+
+* = an adapter CFU which is stateful and/or serializable if its target CFU(s) are
 
 * * *
 
-Copyright (C) 2019-2022, Gray Research LLC.
+Copyright (C) 2019-2023, Gray Research LLC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

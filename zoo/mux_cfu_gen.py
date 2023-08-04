@@ -2,7 +2,7 @@
 """
 generate an n-target mux_cfu
 
-Copyright (C) 2019-2022, Gray Research LLC.
+Copyright (C) 2019-2023, Gray Research LLC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ def main():
         exit(1)
 
 def generate(ports=2):
-    if type is int:
+    if type(ports) is int:
         n = ports
     else:
         n = ports[0]
@@ -48,7 +48,7 @@ def generate(ports=2):
     t = Template(
 """// {{name}}.sv: multiplex {{n}} target CFUs (CFU-L2)
 //
-// Copyright (C) 2019-2022, Gray Research LLC.
+// Copyright (C) 2019-2023, Gray Research LLC.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,10 +64,9 @@ def generate(ports=2):
 
 // {{name}}: multiplex {{n}} target CFUs (CFU-L2)
 module {{name}}
-    import common_pkg::*;
-    import cfu_pkg::*;
+    import common_pkg::*, cfu_pkg::*;
 #(
-    `CFU_L2_PARAMS(/*N_CFUS*/1, /*N_STATES*/1, /*FUNC_ID_W*/$bits(cfid_t), /*INSN_W*/0, /*DATA_W*/32),
+    `CFU_L2_PARAMS(/*N_CFUS*/{{n}}, /*N_STATES*/0, /*FUNC_ID_W*/$bits(cfid_t), /*INSN_W*/0, /*DATA_W*/32),
     parameter int N_REQS    = 16    // max no. of in-flight requests per initiator and per target
 ) (
     `CFU_CLOCK_PORTS,
@@ -76,9 +75,8 @@ module {{name}}
     `CFU_L2_PORTS(output, input, t{{'%1d'%p}}_req, t{{'%1d'%p}}_resp){% if not loop.last %},{% endif %} {% endfor %}
 );
     initial ignore(
-        check_cfu_l2_params("{{name}}", CFU_LI_VERSION, CFU_N_CFUS,
-            CFU_CFU_ID_W, CFU_STATE_ID_W, CFU_FUNC_ID_W, CFU_INSN_W, CFU_DATA_W)
-    &&  check_param("{{name}}", "CFU_FUNC_ID_W", CFU_FUNC_ID_W, $bits(cfid_t)));
+        `CHECK_CFU_L2_PARAMS
+    &&  check_param("CFU_FUNC_ID_W", CFU_FUNC_ID_W, $bits(cfid_t)));
 `ifdef MUX_CFU_VCD
     initial begin $dumpfile("{{name}}.vcd"); $dumpvars(0, {{name}}); end
 `endif
@@ -108,7 +106,7 @@ module {{name}}
         .t_req_insns({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_req_insn{% if not loop.last %}, {% endif %}{% endfor %} }),
         .t_req_data0s({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_req_data0{% if not loop.last %}, {% endif %}{% endfor %} }),
         .t_req_data1s({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_req_data1{% if not loop.last %}, {% endif %}{% endfor %} }),
-        .t_resp_valids({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_resp_vaid{% if not loop.last %}, {% endif %}{% endfor %} }),
+        .t_resp_valids({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_resp_valid{% if not loop.last %}, {% endif %}{% endfor %} }),
         .t_resp_readys({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_resp_ready{% if not loop.last %}, {% endif %}{% endfor %} }),
         .t_resp_statuss({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_resp_status{% if not loop.last %}, {% endif %}{% endfor %} }),
         .t_resp_datas({ {% for p in range(n-1,-1,-1) %}t{{'%1d'%p}}_resp_data{% if not loop.last %}, {% endif %}{% endfor %} })
