@@ -4,17 +4,16 @@ _Draft Proposed_ Composable Custom Extensions Specification
 This document comprises draft proposed specifications for
 hardware-software and hardware-hardware interfaces, formats, and metadata,
 enabling independent, efficient, and robust composition of diverse
-custom instruction set extensions, hardware custom function units,
-and software libraries.
+composable custom instruction set extensions, composable extension units
+hardware, and composable extension libraries software.
 
 It is a work in progress. We request your feedback.
 
-At present this is not a work product of a RISC-V International Working
-Group, Technical Committee, or subcommittee.  Rather we share this work
-in the hope that it may motivate and inform two hypothetical
-RISC-V International Task Groups:
-1) ISA: CX-ISA TG: Composable Extensions (-Zicx); and
-2) non-ISA: CXU-LI TG: Composable Extension Unit Logic Interface.
+At present this is not a work product of a RISC-V International SIG, Task
+Group, or subcommittee.  Rather we share this work in the hope that it
+may motivate and inform a RISC-V International Task Group for a
+CX-ISA composable extensions extension, plus non-ISA
+(CX API, CX ABI, CXU logic interface) interoperation interface standards.
 
 (Pending standardization, implementers might elect to implement the
 present specifications as their own _custom extension_.)
@@ -26,8 +25,8 @@ Olof Kingdren, Maciej Kurc, Guy Lemieux, Charles Papon, Zdenek Prikryl, Tim Vogt
 
 * * *
 
-Copyright (C) 2019-2023, Jan Gray <jan@fpga.org> +
-Copyright (C) 2019-2023, Tim Vogt
+Copyright (C) 2019-2024, Jan Gray <jan@fpga.org> +
+Copyright (C) 2019-2022, Tim Vogt
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License.  You may obtain

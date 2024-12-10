@@ -20,22 +20,28 @@ invites domain-specific custom instructions within the base ISA
 cite:[risc-v-unpriv(5)].
 
 There are many RISC-V processors with custom instruction extensions,
-and now some vendor tooling for creating them. But the software libraries
-that use these extensions and the cores that implement them are authored
+and vendor tooling for creating them. But the software libraries that
+use these extensions and the cores that implement them are authored
 by different organizations, using different tools, and might not work
 together side-by-side in a new system. Different composable extensions
-may conflict in use of opcodes, or their implementations may require
-different CPU cores, pipeline structures, logic extensions, models of
-computation, means of discovery, or error reporting regimes. Composition
-is difficult, impairing reuse of hardware and software, and fragmenting
-the RISC-V ecosystem.
+may conflict in use of custom opcodes, custom CSR addresses, or their
+implementations may require different CPU cores, pipeline structures,
+logic extensions, models of computation, means of discovery, or error
+reporting regimes. Composition is difficult, impairing reuse of hardware
+and software, and fragmenting the RISC-V ecosystem: if you can't use
+_this_ extension, you can't also use _that_ extension.
 
-The RISC-V Composable Custom Extensions Specification introduces a
-set of hardware-hardware and hardware-software extensions and metadata
-designed to make it easy to create, compose, reuse, version, program,
-and deploy systems with multiple composable extensions and their libraries,
-enabling an open ecosystem, and marketplace, of composable custom extensions'
-hardware and software.
+The RISC-V Composable Custom Extensions Specification defines an ISA
+extension plus non-ISA interoperation interfaces (HW-HW and HW-SW) and
+metadata, enabling a new, entirely optional, backwards compatible,
+managed _subcategory_ of custom extensions, that make it easy and routine to
+compose my composable extensions with yours, and others, without prior
+coordination, and without recompiling our libraries or our operating system.
+
+This enables robust reuse of anyone's composable extensions and libraries,
+and provides a uniform programming model across all such extensions,
+together enabling a marketplace of reusable extensions, libraries, and
+hardware modules.
 
 === Open, agile, interoperable instruction set innovation
 
@@ -51,19 +57,30 @@ In contrast, the extensions defined in this specification allow anyone,
 whether individual, organization, or consortium, to rapidly define,
 develop, and use:
 
-* a _composable extension (CX):_ a composable custom extension consisting of a set of _custom function (CF) instructions;_
-* a _composable extension unit (CXU):_ a composable hardware core that implements a composable extension;
-* an accelerated _composable extension library_ that issues custom functions of composable extensions;
+* a _composable extension (CX):_ the _interface contract_ of a composable
+custom extension consisting of a set of _custom function (CF) instructions_
+and CX custom CSRs _(CX CSRs)_ and their behavior;
+
+* a _composable extension unit (CXU):_ a composable hardware core that
+implements a composable extension;
+
+* a _composable extension library_ that issues custom functions of
+composable extensions;
+
 * a processor that can use any CXU;
+
 * tools to create or consume these elements; and
-* to compose these arbitrarily into a system of hardware accelerated software libraries.
+
+* to compose these arbitrarily into a system of hardware accelerated
+software libraries.
 
 There need be _no central authority_, no lock in, no lock out, and no
 asking for permission. Composable extensions, their CXUs and libraries,
 may be open or proprietary, of broad or narrow interest. A new processor
-can use existing CXUs and CX libraries. A new composable extension, CXU, and
-library can be used by existing CPUs and systems. Many CXUs may implement
-a given composable extension, and many libraries may use a composable extension.
+can use existing CXUs and CX libraries. A new composable extension,
+CXU, and library can be used by existing CPUs and systems. Many CXUs
+may implement a given composable extension, and many libraries may use
+a composable extension.
 
 Such open composition requires routine, robust integration of separately
 authored, separately versioned elements into stable systems that _just
@@ -73,16 +90,17 @@ system works correctly today, it continues to work, even as extensions
 and implementations evolve across years and decades.
 
 Composition also requires an unlimited number of independently developed
-composable extensions to coexist within a fixed ABI and ISA. This is achieved
-with <<multiplexing,_composable extension multiplexing_>>, described below.
+composable extensions to coexist within a fixed ABI and ISA. This is
+achieved with <<multiplexing,_composable extension multiplexing_>>,
+described below.
 
 === Examples
 
 Alice develops a multicore RISC-V-based FPGA SmartNIC application
 processor subsystem. The software stack includes processes that already
-use a cryptography CX library that issues custom instructions, of a
-cryptography composable extension, that execute on a cryptography custom
-function unit.
+use a cryptography CX library that issues custom instructions, of
+a cryptography composable extension, that execute on a cryptography
+composable extension unit.
 
 Profiling reveals a compute bottleneck in file block data
 compression. Fortunately, the compression library can use a
@@ -121,12 +139,13 @@ updating the CXU map. Bob's system now runs highly accelerated with
 cryptography, compression, and inference custom function instructions
 issuing from the various CPU cores and executing in the various CXUs.
 
-<<composed-system>> illustrates this.  A _Composer_ tool assembles and
-configures the reusable, composable CPU and CXU RTL packages into a
-complete system, per the system manifest, and generates a devicetree (or
-similar) that determines the system CXU map. Each accelerated library uses
-the Runtime to select its respective custom iterface, and its CXU, prior
-to issuing custom function instructions of that extension to that CXU.
+<<composed-system>> illustrates this. A _Composer_ EDA tool assembles
+and configures the reusable, composable CPU and CXU RTL packages into
+a complete system, per the system manifest, and generates a devicetree
+(or similar) that determines the system CXU map. Each extension library
+uses the CX Runtime to select its respective composable extension, and
+its CXU, prior to issuing custom function instructions of that extension
+to that CXU.
 
 === Scope: reliable composition via strict isolation
 
@@ -138,20 +157,29 @@ operands (integer register(s) and/or immediate value), with read/write
 access to the extension's private state (if any), writing the result to
 a destination register.
 
+A CF may access the CX's custom CSRs (CX CSRs).
+
 A CF may not access other resources, such as floating-point registers
 or vector registers, pending definition of suitable custom instruction
 formats.
 
 A CF may not access _isolation-problematic_ shared resources such as
-memory, CSRs, the program counter, the instruction stream, exceptions,
-or interrupts, pending a means to ensure correct composition by
-design. (Except that, as with RISC-V floating point extensions, the
-default error model accumulates CXU errors in a shared CXU status CSR.)
+memory, standard CSRs, the program counter, the instruction stream,
+exceptions, or interrupts, pending a means to ensure correct composition
+by design. (Except that, as with RISC-V floating point extensions,
+the error model accumulates CX custom operation errors in a shared CX
+status standard CSR.)
 
 [TIP]
 ====
 The isolated state of a composable extension can include private registers
 and private memories.
+====
+
+[TIP]
+====
+CX CSRs provide a uniform, conflict-free way to provide, and access,
+per CX custom CSRs.
 ====
 
 ==== Stateless and stateful composable extensions
@@ -164,12 +192,13 @@ extension (only).
 
 Isolated state means that latency notwithstanding, 1) the behavior of
 the extension only depends upon the series of CF requests issued on that
-extension and never upon on any other operation of the system; and 2)
-besides updating extension state, the CXU status CSR, and a destination
-register, issuing a CF has no effect upon any other architected state or
-behavior of the system. Issuing a CF instruction may update the current
-state context of the composable extension but has no effect upon another
-state context of that extension, nor that of any other extension.
+extension, and of CX CSR accesses to that extension, and never upon on any
+other operation of the system; and 2) besides updating extension state,
+the CX status CSR, and a destination register, issuing a CF has no effect
+upon any other architected state or behavior of the system. Issuing a CF
+instruction or accessing a CX CSR may update the current state context
+of the composable extension but has no effect upon another state context
+of that extension, nor that of any other extension.
 
 A CXU implementing a stateful composable extension is typically provisioned
 with one state context per hart, but other configurations, including
@@ -178,14 +207,16 @@ pool of shared contexts, or several harts sharing one context, or one
 singleton context, are also possible. Similarly, each CXU in a system
 may be configured with a different number of its state contexts.
 
-A <<serializable,_serializable_>> stateful composable extension
-supports extension-agnostic context management.
+All stateful composable extensions are <<serializable,_serializable_>>
+and support uniform (extension-agnostic) CX state context
+save/restore/management.
 
 [TIP]
 ====
-Although composable extensions never introduce nor use CSRs, the same effect
-can be obtained via custom functions that read or write facets of the
-extension state context.
+CX CSRs provide access to control and status of a stateful composable
+extension. A stateful CX may also have other isolated state that is not
+architecturally visible, but which nevertheless determines the behavior
+and results of the CX's CF instructions and custom CSRs.
 ====
 
 === Standard extensions and formats
@@ -194,17 +225,18 @@ To facilitate an open ecosystem of composable extensions, CXUs,
 libraries, and tools, the specification defines common interop extensions
 and formats:
 
-* the _CXU Logic Interface (CXU-LI),_
-* the _Composable Extension Hardware-Software Interface (CX-ABI), including CXU-extensions to RV-I (-Zicx)_,
-* the _Composable Extension Runtime API (CX-RT)_, and
-* build-time _CXU Metadata (CXU-MD)._
+* _CX-ISA_, the _Composable Extensions' ISA Extension,_
+* _CX-API_, the _Composable Extensions' Application Programming Interface,_
+* _CX-ABI_, the _Composable Extensions' Application Binary Interface,_
+* _CXU-LI_, the _CXU Logic Interface_,
+* _CXU-MD_, build-time _CXU Metadata._
 
 [[layers]]
 .Hardware-software extensions stack. New standard extensions and formats are shaded.
 image::composition-layers.png[image,width=400]
 
 The hardware-software extensions stack (<<layers>>) shows how these
-extensions and formats work together to compose user-defined custom
+extensions and formats work together to compose user-defined composable
 extensions CX~0~ and CX~1~, their libraries, and their CXUs into a system.
 
 ==== CXU Logic Interface (CXU-LI)
@@ -212,47 +244,49 @@ extensions CX~0~ and CX~1~, their libraries, and their CXUs into a system.
 The CXU-LI defines the hardware-to-hardware logic extension between a
 _CXU requester_ (e.g., a CPU) and a _CXU responder_ (e.g., a CXU). When
 a custom function instruction issues, the CPU sends a _CXU request_,
-providing the request's _CXU identifier (<<CXU_ID,CXU_ID>>)_, the _custom function
-identifier (<<CF_ID,CF_ID>>), _state index (<<STATE_ID,STATE_ID>>)_, if any, and request data
-(operands). The CXU performs the custom function then sends a _CXU
-response_ providing response data and error status.
+providing the request's _CXU identifier (<<CXU_ID,CXU_ID>>)_,
+the _function identifier (<<FUNC_ID,FUNC_ID>>), _state index
+(<<STATE_ID,STATE_ID>>)_, if any, and request data (operands). The
+CXU performs the function then sends a _CXU response_ providing
+response data and error status.
 
-In a system with multiple CPUs and/or CXUs, mux and adapter CXUs
+In a system with multiple CPUs and/or CXUs, switch and adapter CXUs
 accept and route requests to CXUs and accept and route responses back
 to CPUs. The CXU-LI supports CPUs and CXUs of various _feature levels_
 of capability and complexity, including combinational CXUs, fixed-latency
 CXUs, and variable latency CXUs with flow control.
 
 [[intro-CSRs]]
-==== CXU hardware-software extension
+==== CX-ISA: composable extensions' ISA extension
 
-The CXU hardware-software extension, -Zicx, repurposes three custom
-function instruction formats and adds four CSRs. The three instruction
-formats reuse the _custom-0_, _custom-1_, and _custom-2_ formats /
-major opcodes
-cite:[risc-v-unpriv(143)]
-but (via composable extension multiplexing) compose correctly with any
-preexisting vendor-defined CPU-specific composable extensions and their
-custom instructions. The four new CXU CSRs are:
+The CX-ISA "composable extensions" extension adds four new standard CSRs
+(and zero new instructions), that provide access-controlled composable
+extension multiplexing and error signaling. These CSRs modify the behavior
+of `custom-[012]` instructions cite:[risc-v-unpriv(143)] and custom
+address CSRs, to compose, conflict-free, with other composable extensions
+and with any built-in custom extensions. The four new CXU CSRs are:
 
-* `mcx_selector`: selects the hart's current <<CXU_ID,CXU_ID>> and <<STATE_ID,STATE_ID>>, for composable extension multiplexing;
+* `mcx_selector`: selects the hart's current <<CXU_ID,CXU_ID>> and
+<<STATE_ID,STATE_ID>>, for composable extension multiplexing;
+
 * `cx_status`: accumulates CXU errors;
+
 * `mcx_table`, `cx_index`: efficient access control to CXUs and CXU state.
 
 [NOTE]
 ====
-`mcx_table` is insufficient given various M/H/S/U privilege
-levels. This corner of the design requires additional work, and additional
-CSRs.
+The machine mode `mcx_table` CSR is probably insufficient for processors
+with hypervisor privilege levels. This will require additional spec
+design work and additional CX-ISA CSRs.
 ====
 
 [[Intro-CXM]]
 ==== Composable extension multiplexing
 
-Composable extension multiplexing provides an inexhaustible collision-free
-opcode space for CF instructions for diverse composable extensions without
-resort to any _central assigned opcodes authority_, and thereby
-facilitates direct reuse of CX library binaries.
+Composable extension multiplexing provides inexhaustible collision-free
+custom instruction opcodes and custom CSR addresses, for diverse
+composable extensions, without resort to any _central assigned opcodes
+authority_, and thereby facilitates direct reuse of CX library binaries.
 
 A custom-extension-aware library, prior to issuing a CF instruction,
 must first CSR-write a _system and hart specific_ CX selector value to
@@ -262,7 +296,7 @@ extension's `vsetvl` instructions, a CSR-write to `mcx_selector` is a
 prefix that modifies the behavior of CF instructions that follow. With
 each CF instruction issued, the CPU sends a CXU request to the hart's
 current CXU and its current state. This request is routed by standard
-Mux CXU and adapter cores to the hart's _current_ CXU, which performs
+switch and adapter CXUs to the hart's _current_ CXU, which performs
 the custom function using the hart's current state context. Its response
 is routed back to the CPU which writes the destination register and
 updates `cxu_status`.
@@ -286,6 +320,13 @@ Reuse of custom instruction encodings across extensions will make
 debugging, esp. disassembly, more challenging.
 ====
 
+The `mcx_selector` also incorporates a _custom operation trap enable_
+(`cte`). When set, custom instructions and accesses to custom CSRs
+raise an illegal instruction exception. This enables software emulation
+of absent custom instructions, software emulation of absent composable
+extensions, and transparent virtualization of stateful composable
+extensions.
+
 ==== `IStateContext` and serializable stateful composable extensions
 
 The specification defines a composable extension `IStateContext` with four
@@ -303,25 +344,26 @@ extension IStateContext {
 ....
 
 The CXU status indicates cumulative error flags, clean/dirty, and state
-context size.  The read/write state functions access words of the state
+context size. The read/write state functions access words of the state
 context.
 
 These standard custom functions enable an extension-aware CX library to
 access stateful extension specific error status, and an extension-agnostic
 runtime or operating system to reset, save, and reload state context(s).
 
-==== CX Application Programming Interface and CX-ABI
+==== CX-API (Application Programming Interface) and CX-ABI (Application Binary Interface)
 
-The CX-API consists of the _CX Runtime_ API, and a calling convention
-rule. Both are necessary for correct discovery, operation, and composition
+Together the CX-API (the _CX Runtime_ API) and CX-ABI provide the programming
+model used by composable extension libraries.
+
+Both are necessary for correct discovery, operation, and composition
 of CX libraries. As described above (<<intro-CSRs>>) the current `mcx_selector`
 CSR selects the current composable extension/CXU and state context for the
 hart. However, a CX library should not directly create a CX selector
 value, nor directly access the CSR. Rather a CX library uses the CX
 Runtime to look up the CX selector value for its composable extension's
 CX_ID and to write it to `mcx_selector`, prior to issuing CF
-instructions. For example, using a C++ _RAII_ object cx to represent a
-(scoped) composable extension selection:
+instructions. For example,
 
 [source,C++]
 ....
@@ -331,30 +373,39 @@ use_cx cx(CX_ID_IBitmanip);             // csrrw mcx_selector
 uint32_t count = cf(pcnt_cf, data, 0);  // cx_reg cf_id, rd, rs1, rs2
 ....
 
-The provisional CX-ABI defines a _callee-save_ calling convention for
-`mcx_selector`. For example, consider CX library functions `a()` and
-`b()`, for extensions `IA` and `IB`, that issue CF instructions `af0`,
-`af1`, `bf0`, `bf1`, in this program:
+The CX-ABI defines the calling convention for managing the `mcx_selector` CSR.
 
-[source,C++]
-....
-main() { a(); }
-a() { use_cx a_cx(CX_ID_IA); af0; b(); @1 af1; }
-b() { use_cx b_cx(CX_ID_IB); bf0; bf1; }
-....
+Its design follows these tenets and (competing) goals:
 
-with execution trace:
+1. Support composition of CX libraries, including nested composition of CX libraries, alongside legacy custom extension libraries.
+2. Support preexisting legacy custom extension libraries, even when they don't explicitly manage (disable) CX muxing.
+3. Minimize the CX selection "trust surface" to that of the current function (or perhaps, current library).
+4. Minimize the number of CX selector writes.
 
-[source,C++]
-....
-main() { a() { a_cx(); af0; b() { b_cx(); bf0; bf1; ~b_cx(); } @1 af1; ~a_cx(); }
-....
+Therefore for maximum preexisting legacy custom extension library
+compatibility and maximum paranoia (least trust of other code), the
+CX-ABI keeps CX muxing off across function calls, only enabling CX muxing
+and selecting a CX and CX state context immediately prior to issuing
+that CX's custom instructions.
 
-With a callee-save discipline, at point `@1`, upon return from `b()`, the
-current composable extension must be `IA` again. Thus the `b_cx()` constructor
-saves `a()'s` `mcx_selector` value while overwriting it; later its
-`~b_cx()` destructor restores it. This _RAII_ approach also correctly restores
-`mcx_selector` in the event of an exception handling stack unwind.
+The CX-ABI defines these five rules, which must be implemented explicitly
+in code or automatically by CX-ABI aware compilers:
+
+1. *[ABI-INIT]*: Initially, the selection is legacy mode.
+
+2. *[ABI-ENTRY]*: On entry to a function, or following a function call,
+the selection is legacy mode.
+
+3. *[ABI-SELECT-CX]*: Code *must* select a CX prior to issuing that CX's
+custom operations.
+
+4. *[ABI-DESELECT-CX]*: Code that selects a CX *must* select legacy
+mode prior to calling a function, returning, or stack unwinding.
+
+5. *[ABI-SELECT-LEGACY]*: Code *should* select legacy mode prior to issuing
+built-in custom operations.
+
+This is discussed in more detail in the CX-ABI chapter.
 
 === System composition
 
@@ -373,7 +424,7 @@ A system composer (human or tool) gathers the system manifest metadata and
 the metadata of the manifest-specified CPUs and CXUs, then uses (manual
 or automatic) constraint satisfaction to find feasible, optimal parameter
 settings across these components. The composer may also configure or
-generate mux and adapter CXUs to automatically interconnect the CPU and
+generate switch and adapter CXUs to automatically interconnect the CPU and
 the CXUs.
 
 For example, a system composed from a CPU that supports two or three
@@ -381,24 +432,23 @@ cycle fixed latency CXUs, a CXU~1~ that supports response latency
 of one or more cycles, a CXU~2~ that has a fixed response latency of
 three cycles, and CXU~3~ which is combinational (zero cycles latency),
 overall has a valid configuration with three cycles of CXU latency,
-with the CPU coupled to a mux CXU, coupled to CXU~1~ and CXU~2~ and to
+with the CPU coupled to a switch CXU, coupled to CXU~1~ and CXU~2~ and to
 a _fixed latency adapter CXU_, coupled to CXU~3~.
 
 ==== Diversity of systems and operating systems
 
-Composable composable extensions and CXUs are designed for use across
-a broad spectrum of RISC-V systems, from a simple RVI20U-Zicsr-Zicx
-microcontroller running bare metal fully trusted firmware, to a multicore
-RVA20S Linux profile, running secure multi-programmed, multithreaded user
-processes running various CX libraries, and with privileged hypervisors
-and operating systems securely managing access control to CXUs and
-CXU state.
+Composable extensions and CXUs are designed for use across a broad
+spectrum of RISC-V systems, from a simple RVI20U (+CX-ISA) microcontroller
+running bare metal fully trusted firmware, to a multicore RVA20S Linux
+profile, running secure multi-programmed, multithreaded user processes
+running various CX libraries, and with privileged hypervisors and
+operating systems securely managing access control to CXUs and CXU state.
 
 [[versioning]]
 === Versioning
 
-Interoperation specifications live for decades.  Meanwhile "the only
-constant is change".  This specification anticipates various axes of
+Interoperation specifications live for decades. Meanwhile "the only
+constant is change". This specification anticipates various axes of
 versioning.
 
 * Specification versioning. This specification and its requirements
@@ -423,21 +473,29 @@ CXU-LI versioning: A CXU module configuration parameter `CXU_LI_VERSION`
 indicates to the CXU the version of the CXU-LI signals and semantics
 in effect.
 
-Interface versioning: A composable extension is immutable. To change or add
-any custom functions or their behaviors, a new composable extension must
-be minted. (Consider the many AVX vector extensions variants have been
-introduced over many years.)  With Microsoft COM software components, an
-extension `IFoo` might evolve to become `IFoo2`. The original `IFoo` remains
-and `IFoo` clients are unaffected.  But every component implements
-`IUnknown::QueryInterface()`, to determine if the component implements
-a given extension. A component might implement both extensions, giving
-its client a choice.
+Versioning of the extension multiplexing mechanism:
+The `mcx_selector.version` field determines the current extension
+multiplexing version. It provides backwards compatibility with legacy custom
+instructions (i.e., multiplexing _off_) and forwards compatibility with
+future extension multiplexing schemes, anticipating future layouts and
+interpretations of other selector fields and future means of decoding
+`custom-[0123]` instructions into CXU requests.
+
+Composable extension versioning: A composable extension is immutable. To
+change or add any custom functions or their behaviors, a new composable
+extension must be minted. (Consider the many AVX vector extensions
+variants have been introduced over many years.) With Microsoft
+COM software components, an extension `IFoo` might evolve to become
+`IFoo2`. The original `IFoo` remains and `IFoo` clients are unaffected.
+But every component implements `IUnknown::QueryInterface()`, to determine
+if the component implements a given extension. A component might implement
+both extensions, giving its client a choice.
 
 Similarly a CXU might implement two composable extensions, e.g. `IPosit`, and
-`IPosit2`, an enhanced version of `IPosit` introduced later.  In that case,
+`IPosit2`, an enhanced version of `IPosit` introduced later. In that case,
 the CXU will have two CXU IDs, `CXU_CXU_ID_MAX=2`, one for each extension
 it implements, each present in the CXU Map, from `CX_ID_IPosit` to the
-first CXU ID and `CX_ID_IPosit2` to the second.  Thus each CX software
+first CXU ID and `CX_ID_IPosit2` to the second. Thus each CX software
 library present can access the extension, functions, and behavior it
 depends upon, even if only one CXU module implements both behaviors.
 
@@ -447,7 +505,7 @@ at no cost to any existing or future extension.
 
 Implementation versioning: This does not change the extension to a
 component (e.g.. for a CXU, its CXU-LI and the composable extension it
-implements).  At system composition time it may be necessary to specify
+implements). At system composition time it may be necessary to specify
 implementation version requirements, perhaps in metadata, but this
 should not be visible to, computed upon, nor depended upon, the
 HW-HW-SW interfaces.
@@ -512,7 +570,7 @@ software components, at scale, over decades
 cite:[ms-com-interfaces].
 
 [TIP]
-=====
+====
 (End of non-normative Introduction section.)
-=====
+====
 

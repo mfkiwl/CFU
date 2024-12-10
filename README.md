@@ -8,18 +8,22 @@ hardware composable extension units (CXUs), and software libraries.
 Eventually the work will include specifications, hardware packages,
 and software libraries. Presently the repo includes only the 
 [Draft Proposed RISC-V Composable Custom Extensions Specification](spec/spec.pdf)
-[(PDF)](https://raw.githubusercontent.com/grayresearch/CFU/main/spec/spec.pdf),
+[(PDF)](https://raw.githubusercontent.com/grayresearch/CX/main/spec/spec.pdf),
 with hardware CXU core packages, software libraries, tests, and other
 collateral to come.
 
-It is a work in progress. We request your feedback.
+This new [talk video](https://www.youtube.com/watch?v=7daY_E2itpo)
+accompanies the spec, presenting the *Design and Rationale* of the Specification
+([slides PDF](https://raw.githubusercontent.com/grayresearch/CFU/main/collateral/design-rationale-CX-CXU-spec.pdf))
+which explains why RISC-V needs standards-based composable extensions
+to bring order and reuse to the custom extensions Wild West. The talk
+details the design of the various interop interface standards proposed
+in the spec, and importantly, it
+[explains why they are they way they are](https://www.youtube.com/watch?v=7daY_E2itpo&t=415s).
 
-At present this is not a work product of a RISC-V International Working
-Group, Technical Committee, or subcommittee.  Rather we share this work
-in the hope that it may motivate and inform two hypothetical
-RISC-V International Task Groups:
-1) ISA: CX-ISA TG: Composable Extensions (-Zicx); and
-2) non-ISA: CXU-LI TG: Composable Extension Unit Logic Interface.
+As of fall 2023, we are working to submit this work as a basis of a
+proposed RISC-V Composable Extensions Task Group. Please review the draft
+[Composable Extensions (CX) Task Group Charter](https://github.com/riscv-admin/sig-soft-cpu/blob/main/TG/CX/CHARTER.md).
 
 This work summarizes years of ongoing discussions and prototyping by
 (alphabetical order): Tim Ansell, Tim Callahan, Jan Gray, Karol Gugala,
